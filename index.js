@@ -23,6 +23,8 @@ const auth = new GoogleAuth({
   scopes: ['https://www.googleapis.com/auth/cloud-platform'],
 });
 
+console.log('[DEBUG] CRED JSON:', process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+
 const client = new PredictionServiceClient({
   credentials: {
     client_email: jsonKey.client_email,
