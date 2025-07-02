@@ -1,8 +1,8 @@
 // index.js
 const express = require('express');
 const axios = require('axios');
-const fs = require('fs');
 const { GoogleAuth } = require('google-auth-library');
+const { PredictionServiceClient } = require('@google-cloud/aiplatform').v1;
 
 const app = express();
 app.use(express.json());
@@ -12,23 +12,37 @@ const LOCATION = 'us-central1';
 const MODEL = 'veo-3.0-generate-preview';
 const BASE = `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${MODEL}`;
 
-// cria o auth manualmente a partir do key.json
+// Lê da variável de ambiente (Railway)
+const jsonKey = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+
 const auth = new GoogleAuth({
-  credentials: JSON.parse(fs.readFileSync('./key.json', 'utf8')),
-  scopes: 'https://www.googleapis.com/auth/cloud-platform',
+  credentials: {
+    client_email: jsonKey.client_email,
+    private_key: jsonKey.private_key,
+  },
+  scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+});
+
+const client = new PredictionServiceClient({
+  credentials: {
+    client_email: jsonKey.client_email,
+    private_key: jsonKey.private_key,
+  },
+  projectId: jsonKey.project_id,
 });
 
 app.post('/generate-video', async (req, res) => {
   try {
     const { prompt } = req.body;
-
-    // pega o token do auth manual
     const token = await auth.getAccessToken();
 
     // 1) dispara a geração
     const { data: { name } } = await axios.post(
       `${BASE}:predictLongRunning`,
-      { instances: [{ prompt }], parameters: { durationSeconds: 8, generateAudio: true, aspectRatio: '16:9' } },
+      {
+        instances: [{ prompt }],
+        parameters: { durationSeconds: 8, generateAudio: true, aspectRatio: '16:9' },
+      },
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
