@@ -10,8 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "@google-cloud/aiplatform": "^4.2.0",
+    "axios": "^1.10.0",
     "express": "^5.1.0"
   },
-  "devDependencies": {},
   "description": ""
 }
